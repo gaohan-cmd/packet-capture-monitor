@@ -1,0 +1,53 @@
+services:
+  dashboard:
+    build:
+      context: ..
+    restart: unless-stopped
+    environment:
+      CAPTURE_DB_PATH: /app/data/captures.sqlite3
+      MONITOR_TARGET_URL: ${MONITOR_TARGET_URL:-https://ikuuu.win}
+      MONITOR_TOKEN: ${MONITOR_TOKEN:?set MONITOR_TOKEN}
+      DASHBOARD_USERNAME: ${DASHBOARD_USERNAME:-admin}
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:?set DASHBOARD_PASSWORD}
+      MONITOR_SESSION_SECRET: ${MONITOR_SESSION_SECRET:?set MONITOR_SESSION_SECRET}
+      DASHBOARD_COOKIE_SECURE: ${DASHBOARD_COOKIE_SECURE:-1}
+    command: ["packet-monitor", "server", "--host", "0.0.0.0", "--port", "8765"]
+    ports:
+      - "127.0.0.1:8765:8765"
+    volumes:
+      - capture-data:/app/data
+
+  proxy:
+    build:
+      context: ..
+    restart: unless-stopped
+    depends_on:
+      - dashboard
+    environment:
+      MONITOR_API_URL: http://dashboard:8765
+      MONITOR_TARGET_URL: ${MONITOR_TARGET_URL:-https://ikuuu.win}
+      MONITOR_TOKEN: ${MONITOR_TOKEN:?set MONITOR_TOKEN}
+      MONITOR_INCLUDE_SUBDOMAINS: ${MONITOR_INCLUDE_SUBDOMAINS:-1}
+      MONITOR_BODY_LIMIT: ${MONITOR_BODY_LIMIT:-2097152}
+      MITMPROXY_PROXY_AUTH: ${MITMPROXY_PROXY_AUTH:?set MITMPROXY_PROXY_AUTH}
+    command:
+      [
+        "packet-monitor",
+        "proxy",
+        "--listen-host",
+        "0.0.0.0",
+        "--listen-port",
+        "8081",
+        "--dashboard",
+        "http://dashboard:8765",
+        "--target-url",
+        "${MONITOR_TARGET_URL:-https://ikuuu.win}",
+      ]
+    ports:
+      - "8081:8081"
+    volumes:
+      - mitmproxy-ca:/home/appuser/.mitmproxy
+
+volumes:
+  capture-data:
+  mitmproxy-ca:

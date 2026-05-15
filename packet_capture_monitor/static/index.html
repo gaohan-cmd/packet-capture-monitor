@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Packet Capture Monitor</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <div>
+            <h1>Packet Capture Monitor</h1>
+            <p id="targetLabel">https://ikuuu.win</p>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <form class="target-form" id="targetForm">
+            <label for="targetUrlInput">目标</label>
+            <input id="targetUrlInput" name="target_url" type="url" value="https://ikuuu.win" autocomplete="off" />
+            <button class="primary-button" type="submit">应用</button>
+            <span id="targetFormStatus" aria-live="polite"></span>
+          </form>
+          <div class="connection" id="connectionState">
+            <span class="dot"></span>
+            <span>连接中</span>
+          </div>
+          <button class="icon-button" id="refreshButton" title="刷新请求列表" aria-label="刷新请求列表">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+              <path d="M20 4v6h-6" />
+            </svg>
+          </button>
+          <button class="danger-button" id="clearButton">清空</button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="overview" aria-label="采集概览">
+          <article>
+            <span>请求数</span>
+            <strong id="metricTotal">0</strong>
+          </article>
+          <article>
+            <span>2xx</span>
+            <strong id="metricOk">0</strong>
+          </article>
+          <article>
+            <span>4xx/5xx</span>
+            <strong id="metricFailed">0</strong>
+          </article>
+          <article>
+            <span>平均耗时</span>
+            <strong id="metricLatency">0 ms</strong>
+          </article>
+          <article>
+            <span>响应体</span>
+            <strong id="metricBytes">0 B</strong>
+          </article>
+        </section>
+
+        <section class="monitor-grid">
+          <aside class="request-panel">
+            <div class="toolbar">
+              <label class="search-box">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.2-3.2" />
+                </svg>
+                <input id="searchInput" type="search" placeholder="搜索 URL / path / host" autocomplete="off" />
+              </label>
+              <select id="methodFilter" aria-label="按方法筛选">
+                <option value="">全部方法</option>
+                <option>GET</option>
+                <option>POST</option>
+                <option>PUT</option>
+                <option>PATCH</option>
+                <option>DELETE</option>
+              </select>
+              <select id="statusFilter" aria-label="按状态筛选">
+                <option value="">全部状态</option>
+                <option value="pending">Pending</option>
+                <option value="2xx">2xx</option>
+                <option value="3xx">3xx</option>
+                <option value="4xx">4xx</option>
+                <option value="5xx">5xx</option>
+                <option value="error">Error</option>
+              </select>
+            </div>
+
+            <div class="table-head" role="row">
+              <span>方法</span>
+              <span>状态</span>
+              <span>路径</span>
+              <span>耗时</span>
+              <span>大小</span>
+            </div>
+            <div class="request-list" id="requestList" aria-live="polite"></div>
+          </aside>
+
+          <section class="detail-panel" id="detailPanel">
+            <div class="empty-state" id="emptyState">
+              <div class="empty-icon" aria-hidden="true"></div>
+              <h2>等待目标域名请求</h2>
+              <p id="emptyDetailText">代理地址 127.0.0.1:8081 · 目标 https://ikuuu.win</p>
+            </div>
+
+            <div class="detail-content hidden" id="detailContent">
+              <div class="detail-header">
+                <div>
+                  <div class="request-title">
+                    <span class="method-pill" id="detailMethod">GET</span>
+                    <h2 id="detailPath">/</h2>
+                  </div>
+                  <p id="detailUrl"></p>
+                </div>
+                <div class="status-stack">
+                  <span id="detailStatus" class="status-badge pending">Pending</span>
+                  <span id="detailDuration">0 ms</span>
+                </div>
+              </div>
+
+              <nav class="tabs" aria-label="详情标签">
+                <button class="tab active" data-tab="overview">概览</button>
+                <button class="tab" data-tab="request">请求头</button>
+                <button class="tab" data-tab="response">响应头</button>
+                <button class="tab" data-tab="body">响应数据</button>
+              </nav>
+
+              <div class="sensitive-row">
+                <label>
+                  <input type="checkbox" id="showSensitiveToggle" />
+                  显示敏感头
+                </label>
+              </div>
+
+              <div class="tab-page active" id="tab-overview">
+                <div class="kv-grid" id="overviewGrid"></div>
+                <div class="body-split">
+                  <section>
+                    <div class="section-title">请求体</div>
+                    <div id="requestBodyPreview" class="body-viewer"></div>
+                  </section>
+                  <section>
+                    <div class="section-title">响应体</div>
+                    <div id="responseBodyPreview" class="body-viewer"></div>
+                  </section>
+                </div>
+              </div>
+
+              <div class="tab-page" id="tab-request">
+                <div class="header-table" id="requestHeaders"></div>
+              </div>
+
+              <div class="tab-page" id="tab-response">
+                <div class="header-table" id="responseHeaders"></div>
+              </div>
+
+              <div class="tab-page" id="tab-body">
+                <div class="body-toolbar">
+                  <button class="tab mini active" data-body="response">响应数据</button>
+                  <button class="tab mini" data-body="request">请求数据</button>
+                </div>
+                <div id="bodyInspector" class="body-viewer large"></div>
+              </div>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/app.js" type="module"></script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "packet-capture-monitor"
+version = "0.1.0"
+description = "A local visual HTTP(S) request monitor for a configured domain."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "fastapi>=0.110,<1.0",
+  "uvicorn[standard]>=0.27,<1.0",
+  "mitmproxy>=10,<12",
+]
+
+[project.scripts]
+packet-monitor = "packet_capture_monitor.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["packet_capture_monitor*"]
+
+[tool.setuptools.package-data]
+packet_capture_monitor = ["static/*"]
