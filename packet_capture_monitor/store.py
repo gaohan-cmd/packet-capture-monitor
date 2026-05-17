@@ -39,6 +39,7 @@ class CaptureStore:
                 """
                 CREATE TABLE IF NOT EXISTS captures (
                     id TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL DEFAULT 'default',
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL,
                     method TEXT,
@@ -54,8 +55,9 @@ class CaptureStore:
                 )
                 """
             )
+            self._ensure_column(connection, "captures", "user_id", "TEXT NOT NULL DEFAULT 'default'")
             connection.execute(
-                "CREATE INDEX IF NOT EXISTS idx_captures_updated_at ON captures(updated_at DESC)"
+                "CREATE INDEX IF NOT EXISTS idx_captures_user_updated_at ON captures(user_id, updated_at DESC)"
             )
             connection.execute("CREATE INDEX IF NOT EXISTS idx_captures_host ON captures(host)")
             connection.execute("CREATE INDEX IF NOT EXISTS idx_captures_status ON captures(status_code)")
@@ -68,8 +70,48 @@ class CaptureStore:
                 )
                 """
             )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS user_settings (
+                    user_id TEXT NOT NULL,
+                    key TEXT NOT NULL,
+                    value TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    PRIMARY KEY (user_id, key)
+                )
+                """
+            )
 
-    def upsert_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
+    @staticmethod
+    def _ensure_column(
+        connection: sqlite3.Connection, table: str, column: str, definition: str
+    ) -> None:
+        columns = {
+            row["name"]
+            for row in connection.execute(f"PRAGMA table_info({table})").fetchall()
+        }
+        if column not in columns:
+            connection.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+
+    def migrate_legacy_user_id(self, user_id: str) -> None:
+        with self._lock:
+            with self._connect() as connection:
+                connection.execute(
+                    "UPDATE captures SET user_id = ? WHERE user_id = 'default'",
+                    (user_id,),
+                )
+                rows = connection.execute("SELECT key, value, updated_at FROM settings").fetchall()
+                for row in rows:
+                    connection.execute(
+                        """
+                        INSERT INTO user_settings (user_id, key, value, updated_at)
+                        VALUES (?, ?, ?, ?)
+                        ON CONFLICT(user_id, key) DO NOTHING
+                        """,
+                        (user_id, row["key"], row["value"], row["updated_at"]),
+                    )
+
+    def upsert_event(self, user_id: str, event: Dict[str, Any]) -> Dict[str, Any]:
         capture_id = event.get("capture_id")
         if not capture_id:
             raise ValueError("capture_id is required")
@@ -78,13 +120,15 @@ class CaptureStore:
         event_type = event.get("type")
 
         with self._lock:
-            current = self.get(capture_id, default=None)
+            current = self.get(user_id, capture_id, default=None)
             record = current or {
                 "id": capture_id,
+                "user_id": user_id,
                 "created_at": timestamp,
                 "updated_at": timestamp,
                 "state": "pending",
             }
+            record["user_id"] = user_id
 
             if event_type == "request":
                 request_data = event.get("request") or {}
@@ -116,20 +160,27 @@ class CaptureStore:
                 raise ValueError("type must be request, response, or error")
 
             record["updated_at"] = timestamp
-            self._save(record)
+            self._save(user_id, record)
             return record
 
-    def _save(self, record: Dict[str, Any]) -> None:
+    def _save(self, user_id: str, record: Dict[str, Any]) -> None:
         response = record.get("response") or {}
         body = response.get("body") or {}
         with self._connect() as connection:
+            existing = connection.execute(
+                "SELECT user_id FROM captures WHERE id = ?",
+                (record["id"],),
+            ).fetchone()
+            if existing and existing["user_id"] != user_id:
+                raise ValueError("capture_id already belongs to another user")
             connection.execute(
                 """
                 INSERT INTO captures (
-                    id, created_at, updated_at, method, url, host, path,
+                    id, user_id, created_at, updated_at, method, url, host, path,
                     status_code, content_type, duration_ms, state, response_size, record_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
+                    user_id=excluded.user_id,
                     updated_at=excluded.updated_at,
                     method=excluded.method,
                     url=excluded.url,
@@ -144,6 +195,7 @@ class CaptureStore:
                 """,
                 (
                     record["id"],
+                    user_id,
                     record.get("created_at") or utc_now(),
                     record.get("updated_at") or utc_now(),
                     record.get("method"),
@@ -159,11 +211,11 @@ class CaptureStore:
                 ),
             )
 
-    def get(self, capture_id: str, default: Any = None) -> Any:
+    def get(self, user_id: str, capture_id: str, default: Any = None) -> Any:
         with self._connect() as connection:
             row = connection.execute(
-                "SELECT record_json FROM captures WHERE id = ?",
-                (capture_id,),
+                "SELECT record_json FROM captures WHERE id = ? AND user_id = ?",
+                (capture_id, user_id),
             ).fetchone()
         if not row:
             return default
@@ -171,13 +223,14 @@ class CaptureStore:
 
     def list(
         self,
+        user_id: str,
         limit: int = 200,
         query: str = "",
         method: str = "",
         status: str = "",
     ) -> List[Dict[str, Any]]:
-        clauses = []
-        params: List[Any] = []
+        clauses = ["user_id = ?"]
+        params: List[Any] = [user_id]
 
         if query:
             clauses.append("(url LIKE ? OR path LIKE ? OR host LIKE ?)")
@@ -206,14 +259,17 @@ class CaptureStore:
             rows = connection.execute(sql, params).fetchall()
         return [self.summarize(json.loads(row["record_json"])) for row in rows]
 
-    def clear(self) -> None:
+    def clear(self, user_id: str) -> None:
         with self._lock:
             with self._connect() as connection:
-                connection.execute("DELETE FROM captures")
+                connection.execute("DELETE FROM captures WHERE user_id = ?", (user_id,))
 
-    def get_setting(self, key: str, default: Any = None) -> Any:
+    def get_setting(self, user_id: str, key: str, default: Any = None) -> Any:
         with self._connect() as connection:
-            row = connection.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
+            row = connection.execute(
+                "SELECT value FROM user_settings WHERE user_id = ? AND key = ?",
+                (user_id, key),
+            ).fetchone()
         if not row:
             return default
         try:
@@ -221,21 +277,21 @@ class CaptureStore:
         except json.JSONDecodeError:
             return row["value"]
 
-    def set_setting(self, key: str, value: Any) -> None:
+    def set_setting(self, user_id: str, key: str, value: Any) -> None:
         with self._lock:
             with self._connect() as connection:
                 connection.execute(
                     """
-                    INSERT INTO settings (key, value, updated_at)
-                    VALUES (?, ?, ?)
-                    ON CONFLICT(key) DO UPDATE SET
+                    INSERT INTO user_settings (user_id, key, value, updated_at)
+                    VALUES (?, ?, ?, ?)
+                    ON CONFLICT(user_id, key) DO UPDATE SET
                         value=excluded.value,
                         updated_at=excluded.updated_at
                     """,
-                    (key, json.dumps(value, ensure_ascii=False), utc_now()),
+                    (user_id, key, json.dumps(value, ensure_ascii=False), utc_now()),
                 )
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self, user_id: str) -> Dict[str, Any]:
         with self._connect() as connection:
             rows = connection.execute(
                 """
@@ -246,7 +302,9 @@ class CaptureStore:
                     AVG(duration_ms) AS avg_duration_ms,
                     SUM(response_size) AS total_response_bytes
                 FROM captures
-                """
+                WHERE user_id = ?
+                """,
+                (user_id,),
             ).fetchone()
         return {
             "total": rows["total"] or 0,

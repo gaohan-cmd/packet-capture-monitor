@@ -361,9 +361,13 @@ const connectWebSocket = () => {
 const applyConfig = (config) => {
   state.config = { ...state.config, ...config };
   const targetUrl = currentTargetUrl();
+  const user = state.config.user || {};
   $("#targetLabel").textContent = targetUrl;
   targetUrlInput.value = targetUrl;
-  $("#emptyDetailText").textContent = `代理地址 127.0.0.1:8081 · 目标 ${targetUrl}`;
+  $("#userBadge").textContent = user.username ? `用户 ${user.username}` : "";
+  $("#emptyDetailText").textContent = user.proxy_username
+    ? `代理账号 ${user.proxy_username} · 目标 ${targetUrl}`
+    : `目标 ${targetUrl}`;
   renderRequestList();
 };
 
@@ -408,6 +412,10 @@ const bindEvents = () => {
   });
 
   $("#refreshButton").addEventListener("click", loadCaptures);
+  $("#logoutButton").addEventListener("click", async () => {
+    await fetch("/api/logout", { method: "POST" });
+    location.href = "/login";
+  });
   $("#clearButton").addEventListener("click", async () => {
     if (!confirm("清空当前采集记录？")) return;
     await fetch("/api/captures", { method: "DELETE" });

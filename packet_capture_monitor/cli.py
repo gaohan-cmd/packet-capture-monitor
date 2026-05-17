@@ -39,7 +39,14 @@ def run_proxy(args: argparse.Namespace) -> int:
     env["MONITOR_TARGET_HOST"] = args.target_url
     env["MONITOR_INCLUDE_SUBDOMAINS"] = "1" if args.include_subdomains else "0"
     env["MONITOR_BODY_LIMIT"] = str(args.body_limit)
+    dashboard_users_configured = bool(os.environ.get("DASHBOARD_USERS") or os.environ.get("DASHBOARD_USERS_FILE"))
     proxy_auth = args.proxy_auth or os.environ.get("MITMPROXY_PROXY_AUTH", "")
+    if dashboard_users_configured and not args.proxy_auth:
+        proxy_auth = "any"
+    elif not proxy_auth and os.environ.get("MONITOR_PROXY_AUTH_MODE") == "dashboard-users":
+        proxy_auth = "any"
+    env["MONITOR_PROXY_AUTH_REQUIRED"] = "1" if proxy_auth else "0"
+    env["MONITOR_DEFAULT_USER_ID"] = os.environ.get("DASHBOARD_USERNAME", "admin")
 
     command = [
         "mitmdump",
@@ -51,7 +58,7 @@ def run_proxy(args: argparse.Namespace) -> int:
         str(addon_path),
     ]
     if proxy_auth:
-        command.extend(["--proxyauth", proxy_auth])
+        command.extend(["--proxyauth", proxy_auth, "--set", "block_global=false"])
 
     sibling_mitmdump = Path(sys.executable).with_name("mitmdump")
     mitmdump_path = str(sibling_mitmdump) if sibling_mitmdump.exists() else shutil.which("mitmdump")

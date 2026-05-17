@@ -179,6 +179,23 @@ p {
   white-space: nowrap;
 }
 
+.user-chip {
+  max-width: 180px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f0fdfa;
+  color: #0f766e;
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .dot {
   width: 8px;
   height: 8px;
@@ -197,7 +214,8 @@ p {
 
 .icon-button,
 .danger-button,
-.primary-button {
+.primary-button,
+.secondary-button {
   height: 34px;
   border-radius: 8px;
   border: 1px solid var(--line);
@@ -226,6 +244,11 @@ p {
 .danger-button {
   padding: 0 14px;
   color: var(--bad);
+}
+
+.secondary-button {
+  padding: 0 14px;
+  color: var(--muted);
 }
 
 .primary-button {
