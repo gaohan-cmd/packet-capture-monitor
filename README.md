@@ -15,6 +15,8 @@ Packet Capture Monitor 是一个用于显式代理调试的 HTTP(S) 请求可视
 - 支持 JSON 格式化、文本/HTML 预览、图片预览、二进制摘要。
 - SQLite 持久化保存采集记录。
 - 默认隐藏 `Authorization`、`Cookie`、`Set-Cookie` 等敏感头。
+<img width="1561" height="579" alt="image" src="https://github.com/user-attachments/assets/8aac362a-ceee-46f4-8f2f-7d9cb5cc8618" />
+
 
 ## 文档
 
