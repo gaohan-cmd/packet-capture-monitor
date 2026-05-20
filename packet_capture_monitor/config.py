@@ -5,7 +5,7 @@ from typing import Any, Dict
 from urllib.parse import urlsplit, urlunsplit
 
 
-DEFAULT_TARGET = "https://ikuuu.win"
+DEFAULT_TARGET = "https://www.aliyundrive.com/"
 
 
 def configured_default_target() -> str:

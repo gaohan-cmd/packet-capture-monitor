@@ -103,7 +103,7 @@ class DomainCaptureAddon:
     def __init__(self) -> None:
         self.api_url = os.environ.get("MONITOR_API_URL", "http://127.0.0.1:8765").rstrip("/")
         configured_target = os.environ.get("MONITOR_TARGET_URL") or os.environ.get(
-            "MONITOR_TARGET_HOST", "ikuuu.win"
+            "MONITOR_TARGET_HOST", "https://www.aliyundrive.com/"
         )
         target_scheme, target_host, target_path = self.parse_target(configured_target)
         self.default_user_id = os.environ.get("MONITOR_DEFAULT_USER_ID", "admin")

@@ -94,7 +94,7 @@ def build_parser() -> argparse.ArgumentParser:
     server = subparsers.add_parser("server", help="Start the dashboard API and UI.")
     server.add_argument("--host", default="127.0.0.1")
     server.add_argument("--port", type=int, default=8765)
-    server.add_argument("--target-url", "--target-host", default="https://ikuuu.win")
+    server.add_argument("--target-url", "--target-host", default="https://www.aliyundrive.com/")
     server.add_argument("--db-path", default="")
     server.add_argument("--reload", action="store_true")
     server.set_defaults(func=run_server)
@@ -103,7 +103,7 @@ def build_parser() -> argparse.ArgumentParser:
     proxy.add_argument("--listen-host", default="127.0.0.1")
     proxy.add_argument("--listen-port", type=int, default=8081)
     proxy.add_argument("--dashboard", default=DEFAULT_DASHBOARD)
-    proxy.add_argument("--target-url", "--target-host", default="https://ikuuu.win")
+    proxy.add_argument("--target-url", "--target-host", default="https://www.aliyundrive.com/")
     proxy.add_argument("--body-limit", type=int, default=2 * 1024 * 1024)
     proxy.add_argument("--proxy-auth", default="", help='Proxy auth in "username:password" format.')
     proxy.add_argument(

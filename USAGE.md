@@ -33,7 +33,7 @@ password=看板密码
 每个用户都有自己的默认采集目标。示例：
 
 ```text
-https://ikuuu.win
+https://www.aliyundrive.com/
 ```
 
 也可以在看板顶部修改目标地址，例如：

@@ -10,7 +10,7 @@ services:
     restart: unless-stopped
     environment:
       CAPTURE_DB_PATH: /app/data/captures.sqlite3
-      MONITOR_TARGET_URL: ${MONITOR_TARGET_URL:-https://ikuuu.win}
+      MONITOR_TARGET_URL: ${MONITOR_TARGET_URL:-https://www.aliyundrive.com/}
       MONITOR_TOKEN: ${MONITOR_TOKEN:?set MONITOR_TOKEN}
       DASHBOARD_USERS: ${DASHBOARD_USERS:-}
       DASHBOARD_USERS_FILE: ${DASHBOARD_USERS_FILE:-}
@@ -37,7 +37,7 @@ services:
       - dashboard
     environment:
       MONITOR_API_URL: http://dashboard:8765
-      MONITOR_TARGET_URL: ${MONITOR_TARGET_URL:-https://ikuuu.win}
+      MONITOR_TARGET_URL: ${MONITOR_TARGET_URL:-https://www.aliyundrive.com/}
       MONITOR_TOKEN: ${MONITOR_TOKEN:?set MONITOR_TOKEN}
       MONITOR_INCLUDE_SUBDOMAINS: ${MONITOR_INCLUDE_SUBDOMAINS:-1}
       MONITOR_BODY_LIMIT: ${MONITOR_BODY_LIMIT:-2097152}
@@ -56,7 +56,7 @@ services:
         "--dashboard",
         "http://dashboard:8765",
         "--target-url",
-        "${MONITOR_TARGET_URL:-https://ikuuu.win}",
+        "${MONITOR_TARGET_URL:-https://www.aliyundrive.com/}",
       ]
     ports:
       - "8081:8081"

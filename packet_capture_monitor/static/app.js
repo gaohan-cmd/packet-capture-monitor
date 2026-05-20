@@ -3,9 +3,9 @@ const state = {
   selectedId: null,
   selected: null,
   config: {
-    target_url: "https://ikuuu.win",
+    target_url: "https://www.aliyundrive.com/",
     target_scheme: "https",
-    target_host: "ikuuu.win",
+    target_host: "www.aliyundrive.com",
     include_subdomains: true,
     sensitive_headers: ["authorization", "cookie", "set-cookie", "proxy-authorization"],
   },

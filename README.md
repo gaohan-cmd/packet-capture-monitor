@@ -6,7 +6,7 @@ Packet Capture Monitor 是一个用于显式代理调试的 HTTP(S) 请求可视
 
 ## 功能
 
-- 仅采集指定目标地址，默认 `https://ikuuu.win`。
+- 仅采集指定目标地址，默认 `https://www.aliyundrive.com/`。
 - 支持多用户，每个用户有独立看板账号、代理账号、目标配置和抓包数据。
 - 支持子域名采集，可在配置中关闭。
 - WebSocket 实时推送新增和更新的请求。
@@ -56,7 +56,7 @@ source .venv/bin/activate
 packet-monitor proxy \
   --listen-host 127.0.0.1 \
   --listen-port 8081 \
-  --target-url https://ikuuu.win
+  --target-url https://www.aliyundrive.com/
 ```
 
 浏览器代理设置：

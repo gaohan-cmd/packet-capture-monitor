@@ -81,7 +81,7 @@ class UserDirectory:
                     proxy_password=proxy_password,
                     default_target_url=os.environ.get("MONITOR_TARGET_URL")
                     or os.environ.get("MONITOR_TARGET_HOST")
-                    or "https://ikuuu.win",
+                    or "https://www.aliyundrive.com/",
                     include_subdomains=os.environ.get("MONITOR_INCLUDE_SUBDOMAINS", "1") != "0",
                 )
             ]
@@ -101,7 +101,7 @@ class UserDirectory:
         password = str(record.get("password") or "")
         proxy_username = str(record.get("proxy_username") or username).strip()
         proxy_password = str(record.get("proxy_password") or password)
-        target_url = str(record.get("target_url") or os.environ.get("MONITOR_TARGET_URL") or "https://ikuuu.win")
+        target_url = str(record.get("target_url") or os.environ.get("MONITOR_TARGET_URL") or "https://www.aliyundrive.com/")
         include_subdomains = record.get("include_subdomains")
         if include_subdomains is None:
             include_subdomains = os.environ.get("MONITOR_INCLUDE_SUBDOMAINS", "1") != "0"

@@ -99,10 +99,10 @@ sudo nano /opt/packet-capture-monitor/deploy/.env
 至少设置这些值：
 
 ```env
-DASHBOARD_USERS=[{"username":"alice","password":"请改成强密码","proxy_username":"alice-proxy","proxy_password":"请改成强密码","target_url":"https://ikuuu.win","include_subdomains":true},{"username":"bob","password":"请改成强密码","proxy_username":"bob-proxy","proxy_password":"请改成强密码","target_url":"https://example.com","include_subdomains":true}]
+DASHBOARD_USERS=[{"username":"alice","password":"请改成强密码","proxy_username":"alice-proxy","proxy_password":"请改成强密码","target_url":"https://www.aliyundrive.com/","include_subdomains":true},{"username":"bob","password":"请改成强密码","proxy_username":"bob-proxy","proxy_password":"请改成强密码","target_url":"https://example.com","include_subdomains":true}]
 MONITOR_SESSION_SECRET=至少32位随机字符串
 MONITOR_TOKEN=至少32位随机字符串
-MONITOR_TARGET_URL=https://ikuuu.win
+MONITOR_TARGET_URL=https://www.aliyundrive.com/
 MONITOR_INCLUDE_SUBDOMAINS=1
 MONITOR_BODY_LIMIT=2097152
 DASHBOARD_COOKIE_SECURE=1
