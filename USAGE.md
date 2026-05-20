@@ -175,34 +175,5 @@ Android：
 - 清空看板中的敏感记录，或按运维流程清理数据库。
 - 不再需要时删除本机安装的 mitmproxy CA 证书。
 
-## 本地开发使用
-
-本地启动看板：
-
-```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-packet-monitor server --host 127.0.0.1 --port 8765
-```
-
-另开终端启动本地代理：
-
-```bash
-source .venv/bin/activate
-packet-monitor proxy \
-  --listen-host 127.0.0.1 \
-  --listen-port 8081 \
-  --target-url https://ikuuu.win
-```
-
-本地浏览器代理：
-
-```text
-HTTP Proxy:  127.0.0.1
-HTTP Port:   8081
-HTTPS Proxy: 127.0.0.1
-HTTPS Port:  8081
-```
 
 公网部署说明见 [DEPLOYMENT.md](DEPLOYMENT.md)。
