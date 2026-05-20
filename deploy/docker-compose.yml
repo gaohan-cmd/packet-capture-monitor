@@ -2,6 +2,11 @@ services:
   dashboard:
     build:
       context: ..
+      args:
+        APT_MIRROR: ${APT_MIRROR:-}
+        APT_SECURITY_MIRROR: ${APT_SECURITY_MIRROR:-}
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-}
+        PIP_EXTRA_INDEX_URL: ${PIP_EXTRA_INDEX_URL:-}
     restart: unless-stopped
     environment:
       CAPTURE_DB_PATH: /app/data/captures.sqlite3
@@ -22,6 +27,11 @@ services:
   proxy:
     build:
       context: ..
+      args:
+        APT_MIRROR: ${APT_MIRROR:-}
+        APT_SECURITY_MIRROR: ${APT_SECURITY_MIRROR:-}
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-}
+        PIP_EXTRA_INDEX_URL: ${PIP_EXTRA_INDEX_URL:-}
     restart: unless-stopped
     depends_on:
       - dashboard
